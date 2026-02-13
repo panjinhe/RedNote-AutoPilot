@@ -77,3 +77,42 @@ app/
 - 已移除 `official_api` 模式与相关配置项。
 - 渠道工厂改为仅构建浏览器通道。
 - 文档更新为纯浏览器上架助手定位。
+
+## 持久化上下文自动化（方案 A）
+
+如果你需要在登录后执行自动化（例如货架页），推荐使用持久化上下文。
+
+### 1) 安装依赖
+
+```bash
+uv add --dev playwright
+uv run playwright install chromium
+```
+
+### 2) 首次手动登录并保存会话
+
+```bash
+uv run python scripts/login_once.py \
+  --url "https://ark.xiaohongshu.com/app-item/list/shelf" \
+  --user-data-dir ".browser/xhs-profile" \
+  --state-path ".browser/storage_state.json"
+```
+
+在弹出的浏览器里手动登录，回到终端按 Enter 后会保存状态。
+
+### 3) 复用登录态执行任务
+
+```bash
+uv run python scripts/run_shelf_task.py \
+  --url "https://ark.xiaohongshu.com/app-item/list/shelf" \
+  --user-data-dir ".browser/xhs-profile" \
+  --state-path ".browser/storage_state.json" \
+  --artifact-dir "artifacts/browser"
+```
+
+脚本会输出：
+- 页面截图（便于确认是否仍是登录态）
+- 当前 storage state 导出
+- 命中 `shelf` 关键字的首个 API 返回样本（JSON）
+
+> 建议把 `.browser/` 与 `artifacts/` 加入 `.gitignore`，避免提交敏感会话信息。
