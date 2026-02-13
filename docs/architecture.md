@@ -26,6 +26,10 @@
 
 ## 3. 系统总体架构
 
+新增“执行通道”抽象：
+- `official_api`：通过小红书开放平台 API 执行。
+- `browser_rpa`：通过浏览器任务执行（人机协同，人工最终确认）。
+
 ```text
 ┌────────────────────┐
 │ AI 引擎层           │
@@ -61,9 +65,12 @@
 
 ## 5. 核心模块设计
 
-### 5.1 API Client 层
+### 5.1 执行通道层（Channel）
 
+`app/channels/base.py`
+`app/channels/factory.py`
 `app/api_client/xhs_client.py`
+`app/channels/browser_rpa.py`
 
 ```python
 class XHSClient:
@@ -172,3 +179,10 @@ sign = md5(method?appId=xxx&timestamp=xxx&version=2.0 + appSecret)
 - SaaS 化
 - 多店铺支持
 - 权限管理系统
+
+## 11. 合规边界
+
+- 不支持未授权抓包、逆向接口调用、绕过验证码或风控。
+- 浏览器自动化仅用于人机协同的业务录入与草稿确认流程。
+- 若获得官方 API 资质，优先切换为 `official_api` 通道。
+

@@ -1,0 +1,19 @@
+from __future__ import annotations
+
+from typing import Any, Protocol
+
+
+class CommerceChannel(Protocol):
+    """Unified capability contract for product/order/inventory operations."""
+
+    def create_product(self, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def update_product(self, payload: dict[str, Any]) -> dict[str, Any]: ...
+
+    def set_product_online(self, xhs_product_id: str) -> dict[str, Any]: ...
+
+    def set_product_offline(self, xhs_product_id: str) -> dict[str, Any]: ...
+
+    def get_orders(self, start_time: int, end_time: int) -> dict[str, Any]: ...
+
+    def update_stock(self, xhs_product_id: str, sku_id: str, stock: int) -> dict[str, Any]: ...

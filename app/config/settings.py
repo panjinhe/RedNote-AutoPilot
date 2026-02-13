@@ -1,4 +1,6 @@
 from functools import lru_cache
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -13,6 +15,7 @@ class Settings(BaseSettings):
     )
     api_version: str = "2.0"
     request_timeout: int = 15
+    operation_mode: Literal["official_api", "browser_rpa"] = "official_api"
 
     openai_api_key: str = ""
     scheduler_order_sync_minutes: int = 10
