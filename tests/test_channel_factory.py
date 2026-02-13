@@ -2,11 +2,11 @@ import ast
 from pathlib import Path
 
 
-def test_factory_supports_browser_rpa_mode() -> None:
+def test_factory_uses_browser_channel_only() -> None:
     source = Path("app/channels/factory.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
-    assert "browser_rpa" in source
+    assert "BrowserRPAChannel" in source
 
     build_func = next(
         node
@@ -15,10 +15,10 @@ def test_factory_supports_browser_rpa_mode() -> None:
     )
     returns = [n for n in ast.walk(build_func) if isinstance(n, ast.Return)]
 
-    assert len(returns) >= 2
+    assert len(returns) == 1
 
 
-def test_readme_mentions_no_unauthorized_packet_capture() -> None:
+def test_readme_mentions_pure_browser_assistant() -> None:
     readme = Path("README.md").read_text(encoding="utf-8")
 
-    assert "不建议、也不支持未授权抓包" in readme
+    assert "纯浏览器" in readme

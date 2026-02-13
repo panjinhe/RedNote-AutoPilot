@@ -1,21 +1,14 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="REDNOTE_")
 
-    app_id: str = Field(default="", description="小红书开放平台 App ID")
-    app_secret: str = Field(default="", description="小红书开放平台 App Secret")
-    api_gateway: str = Field(
-        default="https://ark.xiaohongshu.com/ark/open_api/v3/common_controller"
-    )
-    api_version: str = "2.0"
-    request_timeout: int = 15
-    operation_mode: Literal["official_api", "browser_rpa"] = "official_api"
+    operation_mode: Literal["manual", "browser_assist"] = "manual"
+    merchant_publish_url: str = "https://ark.xiaohongshu.com"
 
     openai_api_key: str = ""
     scheduler_order_sync_minutes: int = 10

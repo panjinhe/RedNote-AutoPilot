@@ -1,188 +1,54 @@
-# RedNote-AutoPilot 技术设计文档
+# RedNote-AutoPilot 架构说明（纯浏览器版）
 
-## 1. 项目目标
+## 1. 目标
 
-构建一个基于 AI 的自动化系统，实现：
+RedNote-AutoPilot 现在是一个**纯浏览器操作**的小红书商品上架助手：
 
-- 自动创建商品
-- 自动更新商品
-- 自动上下架
-- 自动库存同步
-- 自动处理订单
-- 自动优化标题与内容
-- 自动分析销售数据并决策
+- AI 负责生成商品草稿（标题、卖点、详情、标签、SKU 建议）。
+- 系统负责生成可执行任务（待人工确认）。
+- 浏览器侧只承担录入辅助，最终发布由人工完成。
 
-最终目标：让小红书店铺运营实现“无人值守”。
-
-## 2. 官方 API 说明
-
-- 官网：<https://open.xiaohongshu.com>
-- API 网关：<https://ark.xiaohongshu.com/ark/open_api/v3/common_controller>
-- OAuth 获取 token：<https://xiaohongshu.apifox.cn/doc-2810928>
-- 签名算法说明：<https://xiaohongshu.apifox.cn/doc-2810932>
-- 创建商品 API 示例：<https://xiaohongshu.apifox.cn/api-24841892>
-- 更新商品 API 示例：<https://xiaohongshu.apifox.cn/api-24846432>
-- 商品上下架 API 示例：<https://xiaohongshu.apifox.cn/api-24838962>
-
-## 3. 系统总体架构
-
-新增“执行通道”抽象：
-- `official_api`：通过小红书开放平台 API 执行。
-- `browser_rpa`：通过浏览器任务执行（人机协同，人工最终确认）。
+## 2. 总体架构
 
 ```text
-┌────────────────────┐
-│ AI 引擎层           │
-│ GPT / 自训练模型    │
-└──────────┬─────────┘
-           │
-┌──────────▼─────────┐
-│ 商品智能生成模块    │
-└──────────┬─────────┘
-           │
-┌──────────────────────┼──────────────────────┐
-│                      │                      │
-┌────▼────┐      ┌──────▼──────┐      ┌──────▼──────┐
-│ 商品管理 │      │ 订单管理     │      │ 库存管理     │
-└────┬────┘      └──────┬──────┘      └──────┬──────┘
-     │                  │                    │
-     └──────────────┬───────┴──────────────┬───────┘
-                    ▼                      ▼
-              小红书 Open API          数据分析系统
+┌───────────────────────┐
+│   AI 内容生成层         │
+│ ai_engine/content_*    │
+└─────────────┬─────────┘
+              │
+┌─────────────▼─────────┐
+│   商品工作流编排层      │
+│ workflows/auto_ops.py  │
+└───────┬─────────┬─────┘
+        │         │
+┌───────▼───┐ ┌───▼──────────┐
+│商品管理层   │ │运营分析/调度层  │
+│product_*   │ │analytics/scheduler│
+└───────┬───┘ └──────────────┘
+        │
+┌───────▼────────────────────┐
+│ 浏览器通道层 channels/      │
+│ BrowserRPAChannel           │
+│ 输出 queued_for_manual_* 任务 │
+└────────────────────────────┘
 ```
 
-## 4. 技术栈
+## 3. 核心模块
 
-- Python 3.14+
-- FastAPI
-- Pydantic
-- Requests
-- APScheduler / Celery
-- Redis
-- PostgreSQL
-- OpenAI API / 本地 LLM
-- Docker + CI/CD
+- `app/ai_engine/`：商品文案生成。
+- `app/product_manager/`：组装草稿并生成创建/更新任务。
+- `app/channels/browser_rpa.py`：浏览器辅助任务通道。
+- `app/channels/factory.py`：统一通道构建（仅浏览器通道）。
+- `app/workflows/auto_ops.py`：运营流程入口。
 
-## 5. 核心模块设计
+## 4. 配置
 
-### 5.1 执行通道层（Channel）
+- `REDNOTE_OPERATION_MODE=manual|browser_assist`
+- `REDNOTE_MERCHANT_PUBLISH_URL=<商家后台地址>`
 
-`app/channels/base.py`
-`app/channels/factory.py`
-`app/api_client/xhs_client.py`
-`app/channels/browser_rpa.py`
+## 5. 后续演进
 
-```python
-class XHSClient:
-    def get_access_token()
-    def refresh_token()
-    def create_product()
-    def update_product()
-    def set_product_online()
-    def set_product_offline()
-    def get_orders()
-    def update_stock()
-```
-
-签名规则：
-
-```text
-sign = md5(method?appId=xxx&timestamp=xxx&version=2.0 + appSecret)
-```
-
-### 5.2 AI 商品生成模块
-
-输入：
-- 商品基础信息
-- 成本价格
-- 类目
-- 关键词
-
-输出：
-- 优化标题
-- 卖点描述
-- 详情页文案
-- 标签
-- FAQ
-- 推荐 SKU 组合
-
-### 5.3 商品自动创建流程
-
-1. AI 生成商品内容
-2. 校验类目和属性
-3. 上传图片（待接入）
-4. 调用 createItem
-5. 创建 SKU
-6. 设置库存
-7. 自动上架
-
-### 5.4 自动运营能力
-
-- 自动调价（规划）
-- 自动下架滞销商品（规划）
-- 自动补库存（规划）
-- 自动评价回复（规划）
-- 自动客服回复（规划）
-
-## 6. 数据库设计（建议）
-
-表：`products`
-
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| id | uuid | 主键 |
-| xhs_product_id | string | 平台商品 ID |
-| title | string | 标题 |
-| cost_price | float | 成本 |
-| sale_price | float | 售价 |
-| status | enum | 上架/下架 |
-
-## 7. 自动化调度设计
-
-使用：
-- APScheduler
-- 或 Celery + Redis
-
-定时任务：
-- 每 10 分钟同步订单
-- 每 1 小时分析销售数据
-- 每天优化滞销商品（规划）
-
-## 8. 安全与权限
-
-- token 加密存储
-- appSecret 不入库
-- 限制接口调用频率
-- 自动刷新 token
-
-## 9. 部署架构
-
-### 单机版
-- Docker + PostgreSQL + Redis
-
-### 生产版
-- Kubernetes + API 服务 + Worker + Scheduler
-
-## 10. 进阶路线
-
-### 第一阶段
-- 完成商品自动创建
-- 完成自动上下架
-- 完成库存同步
-
-### 第二阶段
-- 加入 AI 内容优化
-- 自动分析销量
-- 自动调价
-
-### 第三阶段
-- SaaS 化
-- 多店铺支持
-- 权限管理系统
-
-## 11. 合规边界
-
-- 不支持未授权抓包、逆向接口调用、绕过验证码或风控。
-- 浏览器自动化仅用于人机协同的业务录入与草稿确认流程。
-- 若获得官方 API 资质，优先切换为 `official_api` 通道。
-
+1. ListingPack 标准化输出（title/desc/tags/sku/images/checklist）。
+2. CLI 发布助手（复制字段、打开页面、逐项确认）。
+3. browser_assist 字段映射可配置化。
+4. 执行日志与回放能力。

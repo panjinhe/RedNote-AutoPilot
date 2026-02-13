@@ -4,16 +4,15 @@ from typing import Any
 
 
 class BrowserRPAChannel:
-    """Human-in-the-loop browser workflow adapter.
+    """Browser assistant adapter for human-confirmed listing operations."""
 
-    This adapter does not bypass platform controls.
-    It only prepares draft tasks for manual confirmation.
-    """
+    def __init__(self, mode: str = "manual") -> None:
+        self.mode = mode
 
     def _queued(self, action: str, payload: dict[str, Any]) -> dict[str, Any]:
         return {
             "success": True,
-            "mode": "browser_rpa",
+            "mode": self.mode,
             "action": action,
             "status": "queued_for_manual_confirmation",
             "payload": payload,
