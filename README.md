@@ -33,7 +33,7 @@ AI 驱动的小红书电商中台自动化系统（MVP）。目标是把“自�
 ## 3. 技术栈
 
 ### 后端
-- Python 3.10+
+- Python 3.14+
 - FastAPI
 - Pydantic / pydantic-settings
 - Requests

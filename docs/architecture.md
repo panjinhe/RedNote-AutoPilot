@@ -49,7 +49,7 @@
 
 ## 4. 技术栈
 
-- Python 3.10+
+- Python 3.14+
 - FastAPI
 - Pydantic
 - Requests

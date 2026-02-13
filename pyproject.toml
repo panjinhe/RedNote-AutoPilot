@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "AI-driven e-commerce automation middleware for RedNote/XHS"
 readme = "README.md"
 authors = [{ name = "Codex", email = "codex@openai.com" }]
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 dependencies = [
   "fastapi>=0.116.0",
   "pydantic>=2.11.0",
