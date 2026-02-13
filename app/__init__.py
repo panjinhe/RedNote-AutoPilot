@@ -1,0 +1,1 @@
+"""RedNote-AutoPilot application package."""
