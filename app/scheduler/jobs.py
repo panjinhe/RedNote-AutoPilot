@@ -15,6 +15,7 @@ class TaskScheduler:
             self.workflow.order_manager.sync_recent_orders,
             "interval",
             minutes=self.settings.scheduler_order_sync_minutes,
+            kwargs={"minutes": self.settings.scheduler_order_sync_minutes},
             id="sync_orders",
         )
         self.scheduler.add_job(
