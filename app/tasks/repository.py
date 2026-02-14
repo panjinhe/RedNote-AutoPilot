@@ -46,6 +46,20 @@ class TaskRepository:
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS listing_task_steps (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    task_id TEXT NOT NULL,
+                    step_name TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    retry_count INTEGER NOT NULL DEFAULT 0,
+                    artifact_path TEXT,
+                    error TEXT,
+                    updated_at TEXT NOT NULL
+                )
+                """
+            )
 
     def save_task(self, task: ListingTask) -> None:
         with self._connect() as conn:
@@ -67,6 +81,49 @@ class TaskRepository:
                     json.dumps(task.output, ensure_ascii=False),
                 ),
             )
+
+    def save_step(
+        self,
+        task_id: str,
+        step_name: str,
+        status: str,
+        updated_at: str,
+        retry_count: int = 0,
+        artifact_path: str | None = None,
+        error: str | None = None,
+    ) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO listing_task_steps
+                (task_id, step_name, status, retry_count, artifact_path, error, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (task_id, step_name, status, retry_count, artifact_path, error, updated_at),
+            )
+
+    def list_steps(self, task_id: str) -> list[dict]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT step_name, status, retry_count, artifact_path, error, updated_at
+                FROM listing_task_steps
+                WHERE task_id = ?
+                ORDER BY id ASC
+                """,
+                (task_id,),
+            ).fetchall()
+        return [
+            {
+                "step_name": row[0],
+                "status": row[1],
+                "retry_count": row[2],
+                "artifact_path": row[3],
+                "error": row[4],
+                "updated_at": row[5],
+            }
+            for row in rows
+        ]
 
     def log_step(self, task_id: str, step_name: str, success: bool, message: str, payload: dict, created_at: str) -> None:
         with self._connect() as conn:

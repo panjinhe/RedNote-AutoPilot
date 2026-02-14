@@ -13,7 +13,11 @@ class AutoOpsWorkflow:
         settings = get_settings()
         channel = build_channel()
         task_repo = TaskRepository(settings.task_db_path)
-        task_executor = ListingTaskExecutor(channel, task_repo)
+        task_executor = ListingTaskExecutor(
+            channel,
+            task_repo,
+            final_confirm_required=settings.final_confirm_required,
+        )
 
         self.product_manager = ProductManager(
             channel=channel,

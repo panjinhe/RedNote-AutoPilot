@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     operation_mode: Literal["manual", "browser_assist", "auto_device"] = "auto_device"
     merchant_publish_url: str = "https://ark.xiaohongshu.com"
     device_id: str = "emulator-5554"
+    device_dry_run: bool = True
+    final_confirm_required: bool = True
     task_db_path: str = "data/autopilot.db"
 
     openai_api_key: str = ""
