@@ -7,8 +7,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="REDNOTE_")
 
-    operation_mode: Literal["manual", "browser_assist"] = "manual"
+    operation_mode: Literal["manual", "browser_assist", "auto_device"] = "auto_device"
     merchant_publish_url: str = "https://ark.xiaohongshu.com"
+    device_id: str = "emulator-5554"
+    task_db_path: str = "data/autopilot.db"
 
     openai_api_key: str = ""
     scheduler_order_sync_minutes: int = 10

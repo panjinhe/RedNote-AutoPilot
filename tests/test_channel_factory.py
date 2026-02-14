@@ -1,24 +1,24 @@
-import ast
-from pathlib import Path
+from app.channels.browser_rpa import BrowserRPAChannel
+from app.channels.device_auto import DeviceAutoChannel
+from app.channels.factory import build_channel
 
 
-def test_factory_uses_browser_channel_only() -> None:
-    source = Path("app/channels/factory.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
+def test_factory_returns_device_channel_in_auto_mode(monkeypatch) -> None:
+    monkeypatch.setenv("REDNOTE_OPERATION_MODE", "auto_device")
+    monkeypatch.setenv("REDNOTE_DEVICE_ID", "test-device")
 
-    assert "BrowserRPAChannel" in source
+    from app.config.settings import get_settings
 
-    build_func = next(
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.FunctionDef) and node.name == "build_channel"
-    )
-    returns = [n for n in ast.walk(build_func) if isinstance(n, ast.Return)]
-
-    assert len(returns) == 1
+    get_settings.cache_clear()
+    channel = build_channel()
+    assert isinstance(channel, DeviceAutoChannel)
 
 
-def test_readme_mentions_pure_browser_assistant() -> None:
-    readme = Path("README.md").read_text(encoding="utf-8")
+def test_factory_returns_browser_channel_in_manual_mode(monkeypatch) -> None:
+    monkeypatch.setenv("REDNOTE_OPERATION_MODE", "manual")
 
-    assert "纯浏览器" in readme
+    from app.config.settings import get_settings
+
+    get_settings.cache_clear()
+    channel = build_channel()
+    assert isinstance(channel, BrowserRPAChannel)
