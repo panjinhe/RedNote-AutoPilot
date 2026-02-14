@@ -1,14 +1,27 @@
 from app.ai_engine.content_generator import AIContentGenerator
 from app.analytics.service import AnalyticsService
 from app.channels.factory import build_channel
+from app.config.settings import get_settings
 from app.order_manager.service import OrderManager
 from app.product_manager.service import ProductManager
+from app.tasks.executor import ListingTaskExecutor
+from app.tasks.repository import TaskRepository
 
 
 class AutoOpsWorkflow:
     def __init__(self) -> None:
+        settings = get_settings()
         channel = build_channel()
-        self.product_manager = ProductManager(channel, AIContentGenerator())
+        task_repo = TaskRepository(settings.task_db_path)
+        task_executor = ListingTaskExecutor(channel, task_repo)
+
+        self.product_manager = ProductManager(
+            channel=channel,
+            ai_generator=AIContentGenerator(),
+            task_repo=task_repo,
+            task_executor=task_executor,
+            operation_mode=settings.operation_mode,
+        )
         self.order_manager = OrderManager(channel)
         self.analytics = AnalyticsService()
 

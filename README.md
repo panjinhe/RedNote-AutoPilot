@@ -1,17 +1,19 @@
 # RedNote-AutoPilot
 
-一个**纯浏览器操作**的小红书商品上架助手（MVP）。
+一个支持**手机端全自动执行 + 浏览器辅助兜底**的小红书商品上架助手（MVP+）。
 
 所有PR和Commit消息使用中文
 
-本项目已移除官方开放平台 API 客户端，聚焦两件事：
+本项目已移除官方开放平台 API 客户端，聚焦三件事：
 - AI 生成商品文案与结构化上架草稿。
-- 浏览器辅助录入（人工最终确认发布）。
+- 手机端自动执行上架任务（默认模式）。
+- 浏览器辅助录入（作为兜底模式）。
 
 ## 当前定位
 
 - ✅ 不依赖小红书开放 API
-- ✅ 支持 `manual` / `browser_assist` 两种执行模式
+- ✅ 支持 `auto_device` / `manual` / `browser_assist` 三种执行模式
+- ✅ 内置任务持久化、步骤审计日志、自动执行器
 - ✅ 保留商品草稿生成、上架任务队列、运营分析骨架
 
 ## 快速开始
@@ -24,7 +26,8 @@ uv run fastapi dev app/main.py
 
 可用接口：
 - `GET /health`
-- `POST /products/auto-create`：生成商品草稿并创建“待人工确认”的浏览器任务
+- `POST /products/auto-create`：生成商品草稿、创建任务，并在 `auto_device` 模式下自动执行上架
+- `GET /tasks/{task_id}`：查询任务状态与执行结果
 - `GET /ops/sales-loop`
 - `GET /ops/channel`
 
@@ -38,8 +41,10 @@ uv run pytest
 
 `.env` 关键项：
 
-- `REDNOTE_OPERATION_MODE=manual|browser_assist`
+- `REDNOTE_OPERATION_MODE=auto_device|manual|browser_assist`
 - `REDNOTE_MERCHANT_PUBLISH_URL=<商家后台地址>`
+- `REDNOTE_DEVICE_ID=<设备ID，默认 emulator-5554>`
+- `REDNOTE_TASK_DB_PATH=<任务数据库路径，默认 data/autopilot.db>`
 - `REDNOTE_OPENAI_API_KEY=<可选>`
 
 ## 目录
@@ -47,7 +52,7 @@ uv run pytest
 ```text
 app/
 ├── ai_engine/         # 文案生成
-├── channels/          # 浏览器执行通道（队列化任务）
+├── channels/          # 自动设备通道 + 浏览器兜底通道
 ├── product_manager/   # 商品草稿与创建流程
 ├── order_manager/
 ├── inventory_manager/
@@ -62,6 +67,8 @@ app/
 如果你遇到“只能在手机 App 上架”，请优先参考：`docs/android_emulator_guide.md`。
 
 文档给出了低成本且稳定优先的推荐路径：**真机 Android + ADB + scrcpy + 半自动（人工最终发布）**，模拟器仅作为备选。
+
+若你正在评估“距离可稳定控制手机上架还缺什么”，可先看清单：`docs/mobile_listing_gap_checklist.md`。
 
 ## 拟定计划（请你确认）
 
@@ -84,8 +91,8 @@ app/
 
 - 已删除 `app/api_client/`。
 - 已移除 `official_api` 模式与相关配置项。
-- 渠道工厂改为仅构建浏览器通道。
-- 文档更新为纯浏览器上架助手定位。
+- 渠道工厂支持自动设备通道与浏览器兜底通道。
+- 文档更新为自动化优先的上架助手定位。
 
 ## 持久化上下文自动化（方案 A）
 
