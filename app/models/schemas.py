@@ -14,6 +14,7 @@ class ProductStatus(str, Enum):
 class TaskStatus(str, Enum):
     drafted = "drafted"
     running = "running"
+    wait_manual_confirm = "wait_manual_confirm"
     done = "done"
     failed = "failed"
 

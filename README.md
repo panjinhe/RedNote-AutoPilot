@@ -27,7 +27,8 @@ uv run fastapi dev app/main.py
 可用接口：
 - `GET /health`
 - `POST /products/auto-create`：生成商品草稿、创建任务，并在 `auto_device` 模式下自动执行上架
-- `GET /tasks/{task_id}`：查询任务状态与执行结果
+- `GET /tasks/{task_id}`：查询任务状态、执行结果与步骤轨迹
+- `POST /tasks/{task_id}/confirm`：在人工确认后继续执行最终上架
 - `GET /ops/sales-loop`
 - `GET /ops/channel`
 
@@ -45,6 +46,8 @@ uv run pytest
 - `REDNOTE_MERCHANT_PUBLISH_URL=<商家后台地址>`
 - `REDNOTE_DEVICE_ID=<设备ID，默认 emulator-5554>`
 - `REDNOTE_TASK_DB_PATH=<任务数据库路径，默认 data/autopilot.db>`
+- `REDNOTE_DEVICE_DRY_RUN=<是否仅模拟设备执行，默认 true>`
+- `REDNOTE_FINAL_CONFIRM_REQUIRED=<是否要求发布前人工确认，默认 true>`
 - `REDNOTE_OPENAI_API_KEY=<可选>`
 
 ## 目录

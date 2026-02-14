@@ -68,4 +68,10 @@ class ProductManager:
 
     def get_task(self, task_id: str) -> dict[str, Any]:
         task = self.task_repo.get_task(task_id)
-        return {"task": task.model_dump() if task else None}
+        if not task:
+            return {"task": None, "steps": []}
+        return {"task": task.model_dump(), "steps": self.task_repo.list_steps(task_id)}
+
+    def confirm_task(self, task_id: str) -> dict[str, Any]:
+        task = self.task_executor.confirm_and_publish(task_id)
+        return {"task": task.model_dump(), "steps": self.task_repo.list_steps(task_id)}

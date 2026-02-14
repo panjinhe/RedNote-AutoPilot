@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from app.config.settings import get_settings
 from app.models.schemas import ProductCreate
@@ -21,6 +21,14 @@ def auto_create_product(product: ProductCreate) -> dict:
 @app.get("/tasks/{task_id}")
 def get_task(task_id: str) -> dict:
     return workflow.product_manager.get_task(task_id)
+
+
+@app.post("/tasks/{task_id}/confirm")
+def confirm_task(task_id: str) -> dict:
+    try:
+        return workflow.product_manager.confirm_task(task_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/ops/sales-loop")

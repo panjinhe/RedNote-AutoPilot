@@ -6,10 +6,10 @@ from app.tasks.executor import ListingTaskExecutor
 from app.tasks.repository import TaskRepository
 
 
-def test_auto_create_product_executes_and_persists_task(tmp_path) -> None:
+def test_auto_create_product_waits_manual_confirm_and_can_publish(tmp_path) -> None:
     repo = TaskRepository(str(tmp_path / "autopilot.db"))
     channel = DeviceAutoChannel(device_id="test-device")
-    executor = ListingTaskExecutor(channel=channel, repo=repo)
+    executor = ListingTaskExecutor(channel=channel, repo=repo, final_confirm_required=True)
     manager = ProductManager(
         channel=channel,
         ai_generator=AIContentGenerator(),
@@ -29,9 +29,15 @@ def test_auto_create_product_executes_and_persists_task(tmp_path) -> None:
     )
 
     task = output["task"]
-    assert task["status"] == TaskStatus.done.value
+    assert task["status"] == TaskStatus.wait_manual_confirm.value
     assert task["output"]["create"]["success"] is True
+
+    confirm_result = manager.confirm_task(task["task_id"])
+    assert confirm_result["task"]["status"] == TaskStatus.done.value
 
     loaded = repo.get_task(task["task_id"])
     assert loaded is not None
     assert loaded.status == TaskStatus.done
+
+    steps = repo.list_steps(task["task_id"])
+    assert [step["step_name"] for step in steps] == ["create_product", "set_product_online"]
