@@ -41,6 +41,22 @@ def parse_args() -> argparse.Namespace:
         default="shelf",
         help="Capture first API response URL containing this substring.",
     )
+    parser.add_argument(
+        "--browser",
+        default="msedge",
+        choices=["msedge", "chrome", "chromium"],
+        help="Browser channel to use (default msedge).",
+    )
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Enable interactive mode: keep browser open for manual navigation, press Enter to save and exit.",
+    )
+    parser.add_argument(
+        "--wait-for-new-tab",
+        action="store_true",
+        help="In interactive mode, wait for a new tab to open and switch to it.",
+    )
     return parser.parse_args()
 
 
@@ -68,6 +84,7 @@ def main() -> None:
             user_data_dir=str(user_data_dir),
             headless=not args.headed,
             viewport={"width": 1600, "height": 1000},
+            channel=args.browser,
         )
 
         if state_path.exists():
@@ -97,7 +114,26 @@ def main() -> None:
         page.on("response", on_response)
 
         page.goto(args.url, wait_until="domcontentloaded")
-        page.wait_for_timeout(5000)
+
+        if args.interactive:
+            # Interactive mode: let user manually navigate, press Enter to save and exit
+            print("\n[run_shelf_task] Interactive mode - you can now click links in the browser")
+            
+            if args.wait_for_new_tab:
+                print("[run_shelf_task] Waiting for new tab to open...")
+                # Wait for new tab (max 30 seconds)
+                context.wait_for_event("page", timeout=30000)
+                # Get all pages and switch to the newest one
+                all_pages = context.pages
+                if len(all_pages) > 1:
+                    page = all_pages[-1]
+                    print(f"[run_shelf_task] Switched to new tab (now have {len(all_pages)} tabs)")
+                print("[run_shelf_task] New tab detected! You can now interact with it.")
+            
+            print("[run_shelf_task] After completing your navigation, press Enter here to save state...")
+            input()
+        else:
+            page.wait_for_timeout(5000)
 
         screenshot_path = artifact_dir / f"shelf_{utc_stamp()}.png"
         page.screenshot(path=str(screenshot_path), full_page=True)

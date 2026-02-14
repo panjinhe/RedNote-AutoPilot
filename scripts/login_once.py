@@ -32,6 +32,12 @@ def parse_args() -> argparse.Namespace:
         default=True,
         help="Launch in headed mode (default true).",
     )
+    parser.add_argument(
+        "--browser",
+        default="msedge",
+        choices=["msedge", "chrome", "chromium"],
+        help="Browser channel to use (default msedge).",
+    )
     return parser.parse_args()
 
 
@@ -50,6 +56,7 @@ def main() -> None:
             user_data_dir=str(user_data_dir),
             headless=not args.headed,
             viewport={"width": 1600, "height": 1000},
+            channel=args.browser,
         )
         page = context.new_page()
         page.goto(args.url, wait_until="domcontentloaded")

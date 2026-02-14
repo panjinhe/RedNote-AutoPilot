@@ -2,6 +2,8 @@
 
 一个**纯浏览器操作**的小红书商品上架助手（MVP）。
 
+所有PR和Commit消息使用中文
+
 本项目已移除官方开放平台 API 客户端，聚焦两件事：
 - AI 生成商品文案与结构化上架草稿。
 - 浏览器辅助录入（人工最终确认发布）。
@@ -86,8 +88,9 @@ app/
 
 ```bash
 uv add --dev playwright
-uv run playwright install chromium
 ```
+
+> 注意：脚本默认使用系统 Edge 浏览器，无需手动下载 Chromium。如需使用其他浏览器，可加 `--browser chrome` 或 `--browser chromium`。
 
 ### 2) 首次手动登录并保存会话
 
@@ -114,5 +117,29 @@ uv run python scripts/run_shelf_task.py \
 - 页面截图（便于确认是否仍是登录态）
 - 当前 storage state 导出
 - 命中 `shelf` 关键字的首个 API 返回样本（JSON）
+
+### 交互模式（推荐开发使用）
+
+如果需要点击链接、打开发布页面等，可以使用交互模式：
+
+```bash
+uv run python scripts/run_shelf_task.py --interactive
+```
+
+这会保持浏览器打开，你可以随意操作，完成后按 Enter 保存。
+
+如果链接会打**新标签页**（如"发布单品"），加上 `--wait-for-new-tab`：
+
+```bash
+uv run python scripts/run_shelf_task.py --interactive --wait-for-new-tab
+```
+
+脚本会自动等待新标签页打开并切换到该标签页。
+
+> **浏览器选择**：默认使用 Edge。如需换 Chrome 或 Chromium：
+> ```bash
+> uv run python scripts/login_once.py --browser chrome
+> uv run python scripts/run_shelf_task.py --browser chrome
+> ```
 
 > 建议把 `.browser/` 与 `artifacts/` 加入 `.gitignore`，避免提交敏感会话信息。
